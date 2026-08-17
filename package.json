@@ -1,7 +1,7 @@
 {
   "name": "dsh-pi-compatible",
   "version": "0.1.0",
-  "description": "DeepSeek Harness 的 Pi-compatible agent preset：提供 Pi 风格小写核心工具契约，并保留 DSH-backed 扩展工具。",
+  "description": "在 DeepSeek Harness 中复刻 Pi 工具组的 agent preset，提供 Pi 风格小写核心工具契约并保留 DSH-backed 扩展工具。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
