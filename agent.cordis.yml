@@ -1,0 +1,97 @@
+# Independent Pi-compatible agent plane.
+#
+# This preset is a separate evolution track copied from `pi`; the active `pi`
+# preset is intentionally left untouched. Changes here target tool-contract,
+# execution-semantics, prompt, and result compatibility while continuing to
+# reuse DSH host capability services. pi-catalog hides host-global tools so the
+# selected session sees only this preset's compatibility catalog.
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: >-
+      You are Pi, a coding agent powered by the {{model}} model. You are direct,
+      terse, and hands-on: read the repository, run commands, make edits, and
+      report only what the user needs to know. Your working directory is
+      {{cwd}}.
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: pi-tool-catalog
+  name: ./pi-catalog.mjs?reload=20260808-pi-compatible-1
+
+# Pi exposes native tools directly; do not inherit a process-wide Code Mode setting.
+- id: pi-tool-presentation
+  name: '@deepseek-ai/dsh-agent-tool-presentation'
+  config:
+    mode: native
+
+# The core rows use Pi's lower-case coding-agent contracts. Their source lives
+# in this preset directory so the preset can be installed and moved as a
+# self-contained open-source bundle without touching the copied `pi` modules.
+- id: pi-compatible-core-fs
+  name: ./pi-core-fs-loader.mjs?reload=20260808-pi-core-v3
+  config:
+    maxLines: 2000
+    maxBytes: 51200
+    maxEdits: 64
+    editMaxBytes: 10485760
+
+- id: pi-compatible-core-shell
+  name: ./pi-core-shell.mjs?reload=20260813-pi-core-shell-v1
+  config:
+    defaultTimeoutMs: 120000
+
+- id: pi-compatible-core-search
+  name: ./pi-core-search.mjs?reload=20260813-pi-core-search-v1
+  config:
+    maxBytes: 51200
+    findLimit: 1000
+    grepLimit: 100
+    lsLimit: 500
+    grepLineChars: 500
+
+- id: pi-web
+  name: ./pi-web.mjs
+  config:
+    maxSearchResults: 10
+    maxFetchChars: 50000
+
+- id: pi-todo
+  name: ./pi-todo.mjs
+
+- id: pi-task
+  name: ./pi-task.mjs
+  config:
+    provider: spawn
+
+- id: pi-plan
+  name: ./pi-plan.mjs
+
+- id: pi-think
+  name: ./pi-think.mjs
+
+- id: pi-slash
+  name: ./pi-slash.mjs
+
+# Keep compaction: it changes no tool and Pi sessions compact too.
+- id: compaction
+  name: cordis:group
+  group: true
+  isolate:
+    compaction: true
+    toolResultPruner: true
+  config:
+    - id: compaction-basic
+      name: '@deepseek-ai/dsh-compaction-basic'
+    - id: command-compact
+      name: '@deepseek-ai/dsh-command-compact'
+    - id: tool-result-pruner
+      name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+      config:
+        thresholdChars: 8192
+        headChars: 4096
+        tailChars: 1024
