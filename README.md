@@ -1,8 +1,8 @@
 # dsh-pi-compatible
 
-面向 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai/deepseek-harness) 的 Pi-compatible agent preset。
+在 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai/deepseek-harness) 中复刻 Pi 工具组的 Pi-compatible agent preset。
 
-本项目把 Pi coding-agent 0.84.2 的核心工具调用契约映射到 DSH 宿主能力，同时保留 DSH 提供的网页检索、任务、计划、todo、think 和 slash 扩展。
+本项目把 Pi coding-agent 0.84.2 的核心工具调用契约接入 DSH 宿主能力，同时保留 DSH 提供的网页检索、任务、计划、todo、think 和 slash 扩展。
 
 ## 提供的核心工具
 
