@@ -1,0 +1,6 @@
+# Install the bundled Pi-compatible preset into the user's DSH preset root.
+# The installer is idempotent and never overwrites an existing preset unless
+# force: true is set in this row.
+- insert:
+    - id: dsh-pi-compatible
+      name: dsh-pi-compatible
