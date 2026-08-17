@@ -1,0 +1,2 @@
+name: Pi-compatible 模式
+description: 面向 DeepSeek Harness 的开源 Pi-compatible agent preset：提供小写 read/write/edit/bash/find/grep/ls 核心工具契约，并保留网页检索、任务、计划、todo、think 与 slash 扩展。
