@@ -102,6 +102,7 @@ The default persona is intentionally short and direct. To customize it, copy the
 - Pi resizes large images to 2,000×2,000. DSH's attachment seam has no resize operation, so supported images are stored at their original dimensions and the deviation is disclosed in the tool result.
 - Text `read` rejects files above 64 MiB before whole-file decoding. Grep context expansion skips files above 10 MiB. These safety bounds prevent one tool call from exhausting the long-lived DSH host.
 - Windows is the release-blocking platform. POSIX paths remain supported on a best-effort basis.
+- The preset shadows only the model-facing `sandbox:policy` and `approval:policy` runtime-context prose because it duplicates the Full Access contract and mentions tool parameters that do not exist in Pi. DSH enforcement remains active, and all other runtime contexts remain available.
 - The preset does not reject a narrower DSH permission mode at mount time. Such modes are unsupported; host denial is reported directly and the model is instructed not to request escalation.
 
 ## Development

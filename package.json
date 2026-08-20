@@ -1,6 +1,6 @@
 {
   "name": "dsh-pi-compatible",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Full Access-only DeepSeek Harness presets with a Pi coding-agent 0.84.2-compatible seven-tool core and an optional DSH-backed Plus catalog.",
   "type": "module",
   "main": "lib/index.js",

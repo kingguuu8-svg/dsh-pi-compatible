@@ -15,5 +15,13 @@ const GUIDANCE = [
 export function apply(ctx) {
   const inherited = ctx.tools.schemas().map((schema) => schema.name).filter((toolName) => toolName !== 'run_code')
   if (inherited.length > 0) ctx.tools.restrict({ deny: inherited })
+
+  // Keep DSH enforcement active while removing host-policy prose that repeats
+  // this Full Access-only preset's contract and names non-existent Pi tool
+  // parameters. Scoped contexts shadow the global providers by name; empty
+  // text is filtered from the model-facing runtime-context snapshot.
+  ctx.systemPrompt.context({ name: 'sandbox:policy', order: 110, text: '' })
+  ctx.systemPrompt.context({ name: 'approval:policy', order: 115, text: '' })
+
   ctx.systemPrompt.section({ name: 'tool:pi-compatible-plus-catalog', order: 90, text: GUIDANCE })
 }

@@ -15,7 +15,7 @@
     maxBytes: 65536
 
 - id: pi-compatible-catalog
-  name: ./pi-catalog.mjs?reload=20260820-plus-v1
+  name: ./pi-catalog.mjs?reload=20260820-plus-v2
 
 - id: tool-presentation
   name: '@deepseek-ai/dsh-agent-tool-presentation'

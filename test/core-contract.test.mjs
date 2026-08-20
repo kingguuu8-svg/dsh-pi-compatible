@@ -14,6 +14,7 @@ import { apply as installBundle } from '../lib/index.js'
 function baseContext() {
   const tools = new Map()
   const sections = []
+  const contexts = []
   const denied = []
   const services = new Map()
   return {
@@ -25,7 +26,10 @@ function baseContext() {
       schemas() { return [...tools.values()].map(({ name }) => ({ name })) },
       restrict(rule) { denied.push(rule) },
     },
-    systemPrompt: { section(section) { sections.push(section) } },
+    systemPrompt: {
+      section(section) { sections.push(section) },
+      context(context) { contexts.push(context) },
+    },
     get(name) { return services.get(name) },
     setService(name, value) { services.set(name, value) },
     waterfall(_name, _target, _exec, fallback) { return fallback() },
@@ -33,6 +37,7 @@ function baseContext() {
     inject(_names, callback) { callback({ commands: { register() {} } }) },
     toolsCollected: tools,
     sections,
+    contexts,
     denied,
   }
 }
@@ -81,12 +86,16 @@ test('core registers exactly the seven Pi 0.84.2 tools with lower-case names', (
   assert.deepEqual(Object.keys(ctx.toolsCollected.get('edit').parameters.properties), ['path', 'edits'])
 })
 
-test('catalog masks inherited host tools before Core contributes its own tools', () => {
+test('catalog masks inherited host tools and shadows redundant DSH policy contexts', () => {
   const ctx = baseContext()
   ctx.tools.register({ name: 'host_tool' })
   ctx.tools.register({ name: 'run_code' })
   applyCatalog(ctx)
   assert.deepEqual(ctx.denied, [{ deny: ['host_tool'] }])
+  assert.deepEqual(ctx.contexts, [
+    { name: 'sandbox:policy', order: 110, text: '' },
+    { name: 'approval:policy', order: 115, text: '' },
+  ])
 })
 
 test('edit preserves BOM and CRLF, accepts Pi fuzzy punctuation, and guards the atomic write', async () => {

@@ -1,10 +1,10 @@
 # Pi-compatible Presets 产品需求文档（PRD）
 
-> 状态：Implemented v1.0  
-> 产品版本：`dsh-pi-compatible 0.2.0`  
-> Pi 基线：`@earendil-works/pi-coding-agent 0.84.2`，永久冻结  
-> DSH 基线：`0.1.0-rc.6`，同时参考并验证 rc.7 seam 兼容性  
-> 正式支持平台：Windows  
+> 状态：Implemented v1.0
+> 产品版本：`dsh-pi-compatible 0.2.1`
+> Pi 基线：`@earendil-works/pi-coding-agent 0.84.2`，永久冻结
+> DSH 基线：`0.1.0-rc.6`，同时参考并验证 rc.7 seam 兼容性
+> 正式支持平台：Windows
 > 权限前提：`danger-full-access`
 
 ---
@@ -178,6 +178,8 @@ Preset 负责：
 - 产品只在 `danger-full-access` 下设计和测试；
 - preset 不在 mount 时强制拒绝其他权限；
 - 系统提示明确要求模型不要请求权限升级；
+- 在 preset scope 中以同名空 Context 精确遮蔽 `sandbox:policy` 和 `approval:policy` 的模型可见文本；
+- 遮蔽不得禁用 DSH Sandbox、Approval Service 或其他 Runtime Context；
 - Host Policy 更窄时，工具直接报告 Host 拒绝或能力限制；
 - 其他权限模式的行为不构成兼容承诺。
 

@@ -102,6 +102,7 @@ GitHub 提供 SHA-256 Asset Digest 时会执行校验。下载和解压目录只
 - Pi 会把大图缩放到最大 2,000×2,000；DSH attachment seam 没有缩放操作，因此保存原图，并在工具结果中披露偏差。
 - 文本 `read` 在整文件超过 64 MiB 时会在解码前拒绝；Grep context 展开会跳过超过 10 MiB 的文件，防止单次调用耗尽常驻 DSH Host 内存。
 - Windows 是正式发布阻断平台；POSIX 仅保持尽可能可移植。
+- preset 只遮蔽模型可见的 `sandbox:policy` 和 `approval:policy` Runtime Context 文本，因为它们重复 Full Access 产品前提，还提到了 Pi 工具不存在的参数。DSH 权限执行保持启用，其他 Runtime Context 不受影响。
 - preset 挂载时不会主动拒绝更窄的 DSH 权限模式。其他模式不受支持；Host 拒绝会被直接报告，模型也会被明确要求不要申请权限升级。
 
 ## 开发与验证

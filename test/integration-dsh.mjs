@@ -3,6 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { apply as applyCatalog } from '../pi-catalog.mjs'
 import { apply as applyFs } from '../pi-core-fs.mjs'
 import { apply as applySearch } from '../pi-core-search.mjs'
 import { apply as applyShell } from '../pi-core-shell.mjs'
@@ -13,14 +14,23 @@ const npmRoot = process.platform === 'win32'
 const dshNodeModules = join(npmRoot, '@deepseek-ai', 'dsh', 'node_modules')
 const moduleUrl = (name) => pathToFileURL(join(dshNodeModules, '@deepseek-ai', name, 'lib', 'index.js')).href
 const cordisUrl = pathToFileURL(join(dshNodeModules, '@deepseek-ai', 'cordis', 'lib', 'index.js')).href
-const [{ Context }, { LocalFileSystem }, { LocalSubprocessRuntime }] = await Promise.all([
+const [
+  { Context },
+  { LocalFileSystem },
+  { LocalSubprocessRuntime },
+  { default: SystemPrompt, renderContextSnapshot },
+  { createScope, scopeOf },
+] = await Promise.all([
   import(cordisUrl),
   import(moduleUrl('dsh-fs-local')),
   import(moduleUrl('dsh-subprocess-local')),
+  import(moduleUrl('dsh-system-prompt')),
+  import(moduleUrl('dsh-scope')),
 ])
 
 const workspace = await mkdtemp(join(tmpdir(), 'pi-compatible-dsh-'))
 const host = new Context()
+await host.plugin(SystemPrompt, { includeHarnessIdentity: false })
 const fs = new LocalFileSystem(host, { cwd: workspace, diffBasisMaxBytes: 10 * 1024 * 1024 })
 const subprocess = new LocalSubprocessRuntime(host)
 const tools = new Map()
@@ -56,7 +66,26 @@ try {
   const listed = await tools.get('ls').execute({ path: 'src' }, exec)
   assert.equal(listed.text, 'sample.txt')
 
-  console.log('DSH rc.6 local fs/subprocess integration passed.')
+  let scope
+  await host.plugin(Object.assign((inner) => { scope = createScope(inner, { name: 'pi-policy-shadow' }) }, { inject: ['systemPrompt'] }))
+  host.systemPrompt.context({ name: 'sandbox:policy', order: 110, text: 'global sandbox policy' })
+  host.systemPrompt.context({ name: 'approval:policy', order: 115, text: 'global approval policy' })
+  host.systemPrompt.context({ name: 'other:context', order: 120, text: 'other runtime context' })
+  applyCatalog(new Proxy(scope.ctx, {
+    get(target, property, receiver) {
+      if (property === 'tools') return { schemas: () => [], restrict() {} }
+      return Reflect.get(target, property, receiver)
+    },
+  }))
+  const globalContext = renderContextSnapshot(await host.systemPrompt.assemble())
+  const scopedContext = renderContextSnapshot(await host.systemPrompt.assemble({ scope: scopeOf(scope.ctx) }))
+  assert.match(globalContext, /global sandbox policy/u)
+  assert.match(globalContext, /global approval policy/u)
+  assert.doesNotMatch(scopedContext, /global sandbox policy|global approval policy/u)
+  assert.match(scopedContext, /other runtime context/u)
+  await scope.dispose()
+
+  console.log('DSH rc.6 local fs/subprocess and scoped prompt integration passed.')
   console.log(`fd/rg cache: ${join(process.env.DSH_HOME?.trim() || join(process.env.USERPROFILE, '.dsh'), 'pi-compatible', 'bin')}`)
 } finally {
   await rm(workspace, { recursive: true, force: true })
