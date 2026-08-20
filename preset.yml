@@ -1,2 +1,3 @@
-name: Pi-compatible 模式
-description: 在 DeepSeek Harness 中复刻 Pi 工具组的开源 agent preset：提供小写 read/write/edit/bash/find/grep/ls 核心工具契约，并保留网页检索、任务、计划、todo 与 slash 扩展。
+name: Pi-compatible Core
+description: 以 Pi coding-agent 0.84.2 为冻结基线的 Full Access 编码 Agent，默认暴露 read、bash、edit、write、grep、find、ls 七个核心工具。
+order: 20

@@ -1,6 +1,6 @@
-// Freeze the model-visible host catalog before this preset contributes its own tools.
+// Freeze inherited host tools, then let this Plus preset contribute Pi Core and explicit DSH extensions.
 
-export const name = 'pi-compatible-tool-catalog'
+export const name = 'pi-compatible-plus-tool-catalog'
 export const inject = ['tools', 'systemPrompt']
 
 const GUIDANCE = [
@@ -8,11 +8,12 @@ const GUIDANCE = [
   'Use read and ls to inspect files and directories; find locates files and grep searches contents.',
   'Use write for new files or complete rewrites. Use one edit call with multiple disjoint edits[] entries for precise changes.',
   'Use bash for git, builds, tests, package managers, and other terminal work. Each bash call is a fresh non-persistent process.',
+  'WebFetch, WebSearch, Task, TodoWrite, ExitPlanMode, Think, and SlashCommand are DSH-backed Plus extensions, not Pi 0.84.2 core tools.',
   'This preset is designed and tested only for DSH danger-full-access. Do not request sandbox escalation; if the active host policy is narrower, report the limitation.',
 ].join('\n')
 
 export function apply(ctx) {
   const inherited = ctx.tools.schemas().map((schema) => schema.name).filter((toolName) => toolName !== 'run_code')
   if (inherited.length > 0) ctx.tools.restrict({ deny: inherited })
-  ctx.systemPrompt.section({ name: 'tool:pi-compatible-catalog', order: 90, text: GUIDANCE })
+  ctx.systemPrompt.section({ name: 'tool:pi-compatible-plus-catalog', order: 90, text: GUIDANCE })
 }

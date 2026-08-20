@@ -85,10 +85,14 @@ export function apply(ctx, config = {}) {
         throw new Error(`invalid url: ${args.url}`)
       }
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error(`unsupported url protocol ${parsed.protocol}; only http(s) is allowed`)
+      if (args.prompt !== undefined && typeof args.prompt !== 'string') throw new Error('prompt must be a string')
       const result = await ctx.web.fetch({ url: parsed.href }, exec.signal)
       const content = result.body.kind === 'text' ? result.body.content : ''
       const clipped = content.length > maxFetchChars ? `${content.slice(0, maxFetchChars)}\n\n[further content truncated]` : content
-      return { url: result.url, statusCode: result.statusCode, content: clipped, truncated: result.truncated || content.length > maxFetchChars }
+      const focused = typeof args.prompt === 'string' && args.prompt.trim().length > 0
+        ? `Focus instruction: ${args.prompt.trim()}\n\n${clipped}`
+        : clipped
+      return { url: result.url, statusCode: result.statusCode, content: focused, truncated: result.truncated || content.length > maxFetchChars }
     },
   })
 

@@ -1,71 +1,125 @@
 # dsh-pi-compatible
 
-在 [DeepSeek Harness（DSH）](https://github.com/deepseek-ai/deepseek-harness) 中复刻 Pi 工具组的 Pi-compatible agent preset。
+English | [中文](README.zh.md)
 
-本项目把 Pi coding-agent 0.84.2 的核心工具调用契约接入 DSH 宿主能力，同时保留 DSH 提供的网页检索、任务、计划、todo、think 和 slash 扩展。
+Two **Full Access-only** DeepSeek Harness agent presets whose core tool contract is frozen to `@earendil-works/pi-coding-agent 0.84.2`.
 
-## 提供的核心工具
+- **Pi-compatible Core** exposes exactly seven lower-case tools: `read`, `bash`, `edit`, `write`, `grep`, `find`, and `ls`.
+- **Pi-compatible Plus** exposes the same core plus explicit DSH-backed Web, Task, Todo, Plan, Think, Slash, and compaction capabilities.
 
-- `read(path, offset?, limit?)`
-- `write(path, content)`
-- `edit(path, edits[{oldText, newText}])`
-- `bash(command, timeout?)`
-- `find(pattern, path?, limit?)`
-- `grep(pattern, path?, glob?, ignoreCase?, literal?, context?, limit?)`
-- `ls(path?, limit?)`
+The presets use DSH's filesystem, subprocess, attachment, session, cancellation, model-routing, and presentation seams. They are designed and tested only with the `danger-full-access` permission preset; they do not implement escalation workflows for narrower policies.
 
-核心工具使用 DSH 的 `ctx.fs`、`ctx.shell` 和 `ctx.subprocess` seam，不复制或替换 DSH 宿主的沙箱、凭据和审批实现。图片读取通过 DSH attachment seam 返回，前提是当前模型路由声明支持图像输入。
+## Product contract
 
-## 安装
+### Core tools
 
-在 DSH 的 `web` profile 中安装：
+| Tool | Pi-compatible behavior |
+|---|---|
+| `read(path, offset?, limit?)` | Head truncation at 2,000 lines or 50 KiB, offset continuation, a 64 MiB whole-file safety cap, and PNG/JPEG/GIF/WebP/BMP handling subject to DSH attachment capabilities |
+| `bash(command, timeout?)` | Fresh real Bash process per call, no persistent state, no default timeout, tail truncation with a private full-output spill file |
+| `edit(path, edits[])` | Original-file matching, unique non-overlapping edits, Pi-style fuzzy punctuation fallback, BOM and CRLF/LF preservation, one guarded atomic write |
+| `write(path, content)` | Complete UTF-8 write through DSH; missing parent directories are created by the DSH local filesystem backend |
+| `grep(...)` | ripgrep JSON search, default 100 matches, 500-character line clipping, optional context/glob/literal/case control |
+| `find(pattern, path?, limit?)` | fd glob search, default 1,000 results, `.gitignore`-aware relative paths |
+| `ls(path?, limit?)` | One directory, dotfiles included, case-insensitive sort, `/` after directories, default 500 entries |
+
+All seven tools are visible by default. This intentionally differs from Pi 0.84.2's default four-tool activation (`read`, `bash`, `edit`, `write`): DSH does not reproduce Pi's dynamic tool-activation mechanism.
+
+### Plus extensions
+
+`pi-compatible-plus` additionally registers:
+
+- `WebFetch`
+- `WebSearch`
+- `Task`
+- `TodoWrite`
+- `ExitPlanMode`
+- `Think`
+- `SlashCommand`
+- `/plan`
+- `/compact`
+- DSH basic compaction and tool-result pruning
+
+These are DSH-backed extensions, not Pi 0.84.2 core tools.
+
+## Install
+
+Install the bundle into the DSH Web profile:
 
 ```bash
 dsh plugin --profile web add kingguuu8-svg/dsh-pi-compatible
 ```
 
-也可以在本地仓库目录执行：
+Or install a local checkout:
 
 ```bash
 dsh plugin --profile web add .
 ```
 
-安装后重启 DSH。插件会把自带的 `pi-compatible` preset 幂等复制到：
+The bundle installs both presets into:
 
 ```text
 ${DSH_HOME:-~/.dsh}/.agent-presets/pi-compatible/
+${DSH_HOME:-~/.dsh}/.agent-presets/pi-compatible-plus/
 ```
 
-如果目标 preset 已存在，默认不会覆盖；需要升级包内版本时，在 profile patch 的插件行中设置 `force: true`。
+Installation is idempotent and does not overwrite a complete existing preset. Set `force: true` on the bundle row in the profile patch to replace packaged files during an upgrade. A forced `0.1.x → 0.2.0` migration also removes the known package-owned legacy modules from the Core directory; unrelated user files are preserved.
 
-然后新建会话并选择 **Pi-compatible 模式**。
+After installation, create a new session and choose **Pi-compatible Core** or **Pi-compatible Plus**.
 
-## 直接使用 preset 文件
+## Runtime configuration
 
-如果不需要安装 bundle，也可以把以下文件放入 `$DSH_HOME/.agent-presets/pi-compatible/`：
+| Variable | Meaning |
+|---|---|
+| `PI_COMPAT_BASH_PATH` | Absolute path to the real Bash executable |
+| `PI_COMPAT_FD_PATH` | Absolute path to `fd` |
+| `PI_COMPAT_RG_PATH` | Absolute path to `rg` |
+| `PI_COMPAT_OFFLINE=1` | Disable fd/rg network download |
+| `PI_OFFLINE=1` | Pi-compatible alias that also disables fd/rg download |
+| `DSH_HOME` | DSH home and the private `pi-compatible/bin` cache root |
 
-- `preset.yml`
-- `agent.cordis.yml`
-- `pi-*.mjs`
+Bash resolution follows Pi's platform intent: on Windows, Git Bash under Program Files is preferred before PATH Bash. PowerShell is never silently presented as `bash`.
 
-其中核心工具实现是 `pi-core-fs.mjs`、`pi-core-shell.mjs` 和 `pi-core-search.mjs`；`pi-core-fs-loader.mjs` 只负责提供可刷新的本地加载入口。
+`fd` and `rg` resolution is:
 
-## 开发与测试
+1. explicit environment override;
+2. system executable on PATH;
+3. cached executable under `<DSH_HOME>/pi-compatible/bin`;
+4. latest compatible GitHub release download, unless offline mode is enabled.
+
+When GitHub publishes a SHA-256 asset digest, the downloader verifies it. Downloaded files and extraction directories are private to the current user.
+
+## Persona customization
+
+The default persona is intentionally short and direct. To customize it, copy the preset to a new id and edit that copy's `agent.cordis.yml`. Tool compatibility is the stable product contract; persona text is not.
+
+## Compatibility boundaries
+
+- Pi baseline is permanently frozen to `0.84.2` for this product line.
+- Compatibility means schema and key behavior, not byte-identical error messages or Pi's TUI rendering.
+- DSH owns path authorization, filesystem publication, subprocess-tree cancellation, attachments, sessions, and UI cards.
+- BMP is recognized, but DSH rc.6/rc.7 attachments do not accept BMP; `read` returns a conversion instruction instead of an image block.
+- Pi resizes large images to 2,000×2,000. DSH's attachment seam has no resize operation, so supported images are stored at their original dimensions and the deviation is disclosed in the tool result.
+- Text `read` rejects files above 64 MiB before whole-file decoding. Grep context expansion skips files above 10 MiB. These safety bounds prevent one tool call from exhausting the long-lived DSH host.
+- Windows is the release-blocking platform. POSIX paths remain supported on a best-effort basis.
+- The preset does not reject a narrower DSH permission mode at mount time. Such modes are unsupported; host denial is reported directly and the model is instructed not to request escalation.
+
+## Development
 
 ```bash
 npm run check
 npm test
+npm run test:integration
 ```
 
-测试不需要 LLM API Key；测试上下文使用最小化的 DSH seam mock。
+- Unit tests use DSH seam mocks and require no LLM API key.
+- `test:integration` uses the globally installed DSH rc.6 local filesystem and subprocess packages, executes real Git Bash, and exercises downloaded/cached fd and ripgrep.
+- The running DSH Web host is separately validated by creating blank Core and Plus sessions through `session.create`; no model request is required for mount validation.
 
-## 兼容性边界
+## Trust
 
-- 目标 DSH 版本：`0.1.0-rc.6` 及兼容的后续版本。
-- 核心工具名称和参数采用 Pi-compatible 小写契约。
-- `WebSearch`、`Task`、`ExitPlanMode`、`Think`、`TodoWrite` 和 `SlashCommand` 是 DSH-backed 扩展，不宣称为 Pi core 工具。
-- preset 权限等于它引用的 DSH 插件权限，请在安装第三方 bundle 前自行审阅源码。
+A user preset is a Cordis composition and has the authority of the plugins it loads. This bundle is intentionally Full Access-only and can execute arbitrary Bash commands and modify arbitrary files allowed by the host process. Review the source before installation.
 
 ## License
 
-MIT
+MIT. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the Pi 0.84.2 behavior reference.

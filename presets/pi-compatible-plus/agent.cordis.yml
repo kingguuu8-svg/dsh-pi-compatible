@@ -1,6 +1,4 @@
-# Pi-compatible Core — seven tools frozen to pi-coding-agent 0.84.2.
-# Full Access-only product contract: DSH still owns process, filesystem,
-# cancellation, session, model routing, and presentation seams.
+# Pi-compatible Plus — the seven Pi 0.84.2 core tools plus explicit DSH-backed extensions.
 
 - id: persona
   name: '@deepseek-ai/dsh-persona'
@@ -17,7 +15,7 @@
     maxBytes: 65536
 
 - id: pi-compatible-catalog
-  name: ./pi-catalog.mjs?reload=20260820-core-v1
+  name: ./pi-catalog.mjs?reload=20260820-plus-v1
 
 - id: tool-presentation
   name: '@deepseek-ai/dsh-agent-tool-presentation'
@@ -25,7 +23,7 @@
     mode: native
 
 - id: pi-compatible-core-fs
-  name: ./pi-core-fs.mjs?reload=20260820-core-v1
+  name: ./pi-core-fs.mjs?reload=20260820-plus-v1
   config:
     maxLines: 2000
     maxBytes: 51200
@@ -34,7 +32,7 @@
     editMaxBytes: 10485760
 
 - id: pi-compatible-core-shell
-  name: ./pi-core-shell.mjs?reload=20260820-core-v1
+  name: ./pi-core-shell.mjs?reload=20260820-plus-v1
   config:
     maxLines: 2000
     maxBytes: 51200
@@ -42,13 +40,36 @@
     graceMs: 3000
 
 - id: pi-compatible-core-search
-  name: ./pi-core-search.mjs?reload=20260820-core-v1
+  name: ./pi-core-search.mjs?reload=20260820-plus-v1
   config:
     maxBytes: 51200
     findLimit: 1000
     grepLimit: 100
     lsLimit: 500
     contextFileMaxBytes: 10485760
+
+- id: pi-web
+  name: ./pi-web.mjs
+  config:
+    maxSearchResults: 10
+    maxFetchChars: 50000
+
+- id: pi-todo
+  name: ./pi-todo.mjs
+
+- id: pi-task
+  name: ./pi-task.mjs
+  config:
+    provider: spawn
+
+- id: pi-plan
+  name: ./pi-plan.mjs
+
+- id: pi-think
+  name: ./pi-think.mjs
+
+- id: pi-slash
+  name: ./pi-slash.mjs
 
 - id: compaction
   name: cordis:group

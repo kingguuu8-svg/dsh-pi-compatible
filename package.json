@@ -1,7 +1,7 @@
 {
   "name": "dsh-pi-compatible",
-  "version": "0.1.0",
-  "description": "在 DeepSeek Harness 中复刻 Pi 工具组的 agent preset，提供 Pi 风格小写核心工具契约并保留 DSH-backed 扩展工具。",
+  "version": "0.2.0",
+  "description": "Full Access-only DeepSeek Harness presets with a Pi coding-agent 0.84.2-compatible seven-tool core and an optional DSH-backed Plus catalog.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -12,8 +12,13 @@
     "lib/index.js",
     "agent.cordis.yml",
     "preset.yml",
-    "pi-*.mjs",
+    "pi-catalog.mjs",
+    "pi-core-*.mjs",
+    "presets/**",
     "README.md",
+    "README.zh.md",
+    "PRD.md",
+    "THIRD_PARTY_NOTICES.md",
     "LICENSE",
     "cordis.patch.yml"
   ],
@@ -23,8 +28,9 @@
     }
   },
   "scripts": {
-    "check": "node --check lib/index.js && node --check pi-core-fs.mjs && node --check pi-core-shell.mjs && node --check pi-core-search.mjs && node --check pi-core-fs-loader.mjs",
-    "test": "node --test test/core-contract.test.mjs"
+    "check": "node --check lib/index.js && node --check pi-catalog.mjs && node --check pi-core-common.mjs && node --check pi-core-binaries.mjs && node --check pi-core-fs.mjs && node --check pi-core-shell.mjs && node --check pi-core-search.mjs && node test/check-plus-copies.mjs",
+    "test": "node --test test/core-contract.test.mjs",
+    "test:integration": "node test/integration-dsh.mjs"
   },
   "keywords": [
     "deepseek-harness",
@@ -32,7 +38,8 @@
     "dsh-plugin",
     "agent-preset",
     "pi-compatible",
-    "coding-agent"
+    "coding-agent",
+    "full-access"
   ],
   "license": "MIT",
   "engines": {
